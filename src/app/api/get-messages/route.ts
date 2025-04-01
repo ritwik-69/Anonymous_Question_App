@@ -20,9 +20,25 @@ export async function GET(request: Request) {
   try {
     const user = await UserModel.aggregate([
       { $match: { _id: userId } },
-      { $unwind: '$messages' },
+      {
+        $unwind: {
+          path: '$messages',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       { $sort: { 'messages.createdAt': -1 } },
-      { $group: { _id: '$_id', messages: { $push: '$messages' } } },
+      {
+        $group: {
+          _id: '$_id',
+          messages: { $push: '$messages' },
+        },
+      },
+      // convert null messages to an empty array
+      {
+        $addFields: {
+          messages: { $ifNull: ['$messages', []] },
+        },
+      },
     ]).exec();
 
     if (!user || user.length === 0) {
