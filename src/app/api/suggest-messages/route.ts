@@ -18,7 +18,7 @@ async function getGroqChatCompletion() {
 export async function POST(req: Request) {
   try {
     const chatCompletion = await getGroqChatCompletion();
-    console.log(chatCompletion.choices[0]?.message?.content || "");
+    // console.log(chatCompletion.choices[0]?.message?.content || "");
 
     return Response.json(
       {

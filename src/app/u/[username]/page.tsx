@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 
 import React, { useState } from 'react';
 import axios, { AxiosError } from 'axios';
@@ -23,7 +23,7 @@ import * as z from 'zod';
 import { ApiResponse } from '@/types/ApiResponse';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { messageSchema } from '@/schemas/messageSchemas';
+import { messageSchema } from '@/schemas/messageSchema';
 
 const specialChar = '||';
 
@@ -36,8 +36,18 @@ const initialMessageString =
 
 export default function SendMessage() {
   const params = useParams<{ username: string }>();
-    const username = params.username;
-    const [message, setMessage] = useState<string>(initialMessageString);      
+  const username = params.username;
+  const [message, setMessage] = useState<string>(initialMessageString);
+
+  const {
+    complete,
+    completion,
+    isLoading: isSuggestLoading,
+    error,
+  } = useCompletion({
+    api: '/api/suggest-messages',
+    initialCompletion: initialMessageString,
+  });
 
   const form = useForm<z.infer<typeof messageSchema>>({
     resolver: zodResolver(messageSchema),
@@ -54,7 +64,7 @@ export default function SendMessage() {
   const onSubmit = async (data: z.infer<typeof messageSchema>) => {
     setIsLoading(true);
     try {
-      const response = await axios.post<ApiResponse>('/api/send-messages', {
+      const response = await axios.post<ApiResponse>('/api/send-message', {
         ...data,
         username,
       });
@@ -77,7 +87,7 @@ export default function SendMessage() {
     }
   };
 
-  const fetchSuggestedMessages = async () => {
+   const fetchSuggestedMessages = async () => {
     try {
         const response = await axios.post('/api/suggest-messages');
         setMessage(response.data.message);
@@ -130,6 +140,7 @@ export default function SendMessage() {
           <Button
             onClick={fetchSuggestedMessages}
             className="my-4"
+            disabled={isSuggestLoading}
           >
             Suggest Messages
           </Button>
@@ -140,7 +151,9 @@ export default function SendMessage() {
             <h3 className="text-xl font-semibold">Messages</h3>
           </CardHeader>
           <CardContent className="flex flex-col space-y-4">
-            {
+            {error ? (
+              <p className="text-red-500">{error.message}</p>
+            ) : (
               parseStringMessages(message).map((message, index) => (
                 <Button
                   key={index}
@@ -150,7 +163,7 @@ export default function SendMessage() {
                 >
                   {message}
                 </Button>
-              )
+              ))
             )}
           </CardContent>
         </Card>
