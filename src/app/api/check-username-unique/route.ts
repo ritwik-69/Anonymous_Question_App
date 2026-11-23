@@ -3,6 +3,9 @@ import UserModel from '@/model/User';
 import { z } from 'zod';
 import { usernameValidation } from '@/schemas/signUpSchema';
 
+// This route reads request.url and queries the database, so it must run dynamically.
+export const dynamic = 'force-dynamic';
+
 const UsernameQuerySchema = z.object({
   username: usernameValidation,
 });
